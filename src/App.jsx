@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import './styles.css';
+import io from 'socket.io-client'; // ✅ For trap system socket connection
 
 // List of cue options that can be triggered during the countdown
 const CUE_OPTIONS = [
@@ -17,6 +18,7 @@ function App() {
   const [selectedCues, setSelectedCues] = useState([]); // array of selected cue IDs
   const [timeLeft, setTimeLeft] = useState(0); // countdown in seconds
   const [running, setRunning] = useState(false); // is the countdown active?
+  const [trapMessages, setTrapMessages] = useState([]); // ✅ Trap messages from backend
 
   // Refs to store persistent values between renders
   const intervalRef = useRef(null); // ID of the interval timer
@@ -63,7 +65,7 @@ function App() {
         const match = cueId.match(/^([0-9]+)min$/);
         if (match) {
           const minutes = parseInt(match[1], 10);
-          schedule[cueId] = minutes * 60; // e.g. 5min cue triggers at 300 seconds
+          schedule[cueId] = minutes * 60;
         }
       }
 
@@ -86,21 +88,19 @@ function App() {
     }, 1000);
   };
 
-  // Hook to check and trigger cues during the countdown
+  // ✅ Countdown & cue trigger logic (UNCHANGED)
   useEffect(() => {
     if (!running) return;
 
     console.log("⏱ Current timeLeft:", timeLeft);
     console.log("📋 Cue schedule:", cueScheduleRef.current);
 
-    // Stop timer and audio when countdown finishes
     if (timeLeft === 0) {
       clearInterval(intervalRef.current);
       setRunning(false);
       mainAudioRef.current?.pause();
     }
 
-    // Check if any cue should be triggered now
     for (const [cueId, triggerAt] of Object.entries(cueScheduleRef.current)) {
       const shouldTrigger = timeLeft === triggerAt;
       const notPlayedYet = !playedCuesRef.current.has(cueId);
@@ -119,6 +119,21 @@ function App() {
       }
     }
   }, [timeLeft, running]);
+
+  // Trap system WebSocket listener
+  useEffect(() => {
+    const socket = io('http://localhost:5000'); // im keeping this 
+
+    socket.on('trap_triggered', (data) => {
+      console.log('🚨 Trap Triggered:', data.message);
+      setTrapMessages(prev => [...prev, data.message]);
+
+      const trapSound = new Audio('trap.mp3');
+      trapSound.play().catch(err => console.error("Trap sound failed:", err));
+    });
+
+    return () => socket.disconnect();
+  }, []);
 
   // Compute how much of the progress bar should be filled
   const progressPercent = running ? (1 - timeLeft / (duration * 60)) * 100 : 0;
@@ -179,14 +194,21 @@ function App() {
             </button>
           </>
         )}
+
+        {/* ✅ Display trap messages if any are received */}
+        {trapMessages.length > 0 && (
+          <div style={{ marginTop: '30px' }}>
+            <h3>Trap Activations</h3>
+            <ul>
+              {trapMessages.map((msg, i) => (
+                <li key={i} style={{ color: 'red', fontWeight: 'bold' }}>{msg}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 export default App;
-
-
-
-
-
