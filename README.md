@@ -4,6 +4,10 @@ Escape Arena is an escape room based in Toronto being built by a friend. I am co
 
 Additionally, there is live feedback for raspberry pi traps we've set up in the arena. Once a button is clicked, a trap is activated inside the arena and a notice is given to the game masters to enact the trap
 
+## Important Note
+I am leaving the github pages up as a static soundboard; however, the current project depends on the Flask server for Socket.IO and Pico events, so it can only run as a LAN app from a host laptop (read below)
+
+
 ## Flask Socket.IO connection
 
 The connection banner shows when trap updates are unavailable. The countdown
