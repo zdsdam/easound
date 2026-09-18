@@ -2,9 +2,7 @@
 
 Escape Arena is an escape room based in Toronto being built by a friend. I am consulting for the company and my first project was to build a dyanmic soundboard to notify the amount of time participants have left in the game. 
 
-There are cue's that can be selected (5 minutes left, 10 minutes left, etc), and you can select any length of time for the room to be (harder rooms can be alloted more time). 
-
-One thing I'd like to add in the future is live feedback for raspberry pi traps we've set up in the arena. The cue cooresponding to this is titled "blackout" to signify 1 minute left in the game, but this is a (hopefully) temporary placeholder. 
+Additionally, there is live feedback for raspberry pi traps we've set up in the arena. Once a button is clicked, a trap is activated inside the arena and a notice is given to the game masters to enact the trap
 
 ## Flask Socket.IO connection
 
