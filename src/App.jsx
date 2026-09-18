@@ -142,7 +142,7 @@ function App() {
       }
       const { device_id, event, location, sequence, received_at } = data;
       console.log('🚨 Trap Triggered:', location);
-      setTrapMessages(prev => [...prev, { device_id, event, location, sequence, received_at }]);
+      setTrapMessages(prev => [{ device_id, event, location, sequence, received_at }, ...prev].slice(0, 10));
 
       const trapSound = new Audio(`${import.meta.env.BASE_URL}trap.mp3`);
       trapSound.play().catch(err => console.error("Trap sound failed:", err));
@@ -170,8 +170,20 @@ function App() {
     <div className="container">
       <h2>Escape Room Setup</h2>
       <p role="status" style={{ color: serverConnected ? '#176b32' : '#a12622' }}>
-        Server: {serverConnected ? 'Connected' : 'Disconnected'}
+        <strong>Server: {serverConnected ? 'Connected' : 'Disconnected — reconnecting'}</strong>
+        {!serverConnected && <><br />Trap updates unavailable. The timer keeps running.</>}
       </p>
+      <section aria-label="Most recent trap" aria-live="polite">
+        <h3>Most Recent Trap</h3>
+        {trapMessages.length ? (
+          <p>
+            <strong>{trapMessages[0].location}</strong> —{' '}
+            <time dateTime={trapMessages[0].received_at}>
+              {new Date(trapMessages[0].received_at).toLocaleString()}
+            </time>
+          </p>
+        ) : <p>No traps received this session.</p>}
+      </section>
 
       <div style={{ marginTop: '20px' }}>
         {running ? (
@@ -229,7 +241,7 @@ function App() {
         {/* ✅ Display trap messages if any are received */}
         {trapMessages.length > 0 && (
           <div style={{ marginTop: '30px' }}>
-            <h3>Trap Activations</h3>
+            <h3>Recent Trap Activations (last 10)</h3>
             <ul>
               {trapMessages.map((trap, i) => (
                 <li key={i} style={{ color: 'red', fontWeight: 'bold' }}>

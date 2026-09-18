@@ -6,6 +6,14 @@ Additionally, there is live feedback for raspberry pi traps we've set up in the 
 
 ## Flask Socket.IO connection
 
+The connection banner shows when trap updates are unavailable. The countdown
+and local audio cues run independently of Socket.IO and continue during server
+outages. The most recent trap is highlighted and the latest ten activations
+are kept newest-first for the current page session (cleared on reload).
+Reconnects retain this history; events missed while disconnected are not replayed.
+To test without a Pico, run `python tools/simulate_pico.py --location armoury`
+from the server repository while Flask is running (default port 5050).
+
 ### Offline LAN deployment
 
 Install dependencies once while online, then build and copy the complete site:
