@@ -8,6 +8,35 @@ One thing I'd like to add in the future is live feedback for raspberry pi traps 
 
 ## Flask Socket.IO connection
 
+### Offline LAN deployment
+
+Install dependencies once while online, then build and copy the complete site:
+
+```sh
+cd easound-main
+npm install
+npm run build
+python3 ../earaspberrypi-main/copy_frontend.py ./dist
+cd ../earaspberrypi-main
+source .venv/bin/activate
+python client.py
+```
+
+For folders named `easound` and `earaspberrypi`, substitute those names.
+Install the server requirements into its `.venv` during initial setup as well.
+Open `http://<laptop-LAN-IP>:5000` on the same Wi-Fi network. The production
+build uses `/` as its base and Flask serves the entire `dist` copy, including
+all MP3s from `public/`. React and Socket.IO are bundled locally, with no runtime
+CDNs. After setup, startup and playback need no internet. Rebuild and rerun the
+copy script after frontend edits. This build targets Flask, not GitHub Pages.
+
+Set the Pico's `SERVER_HOST` to the laptop's LAN IP, and allow incoming port
+5000 connections through the laptop firewall. The Wi-Fi network must allow
+devices to communicate with each other. If port 5000 is occupied (for example
+by macOS AirPlay Receiver), free it or use `PORT=5050 python client.py`, open
+port 5050 in the browser, and set the Pico's `SERVER_PORT` to 5050 too.
+Browser audio may require clicking Start once to enable playback.
+
 Run `npm install`, then `npm run dev`. For a separate local Flask server,
 create `.env.local` in this repository containing:
 

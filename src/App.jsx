@@ -72,7 +72,7 @@ function App() {
 
       // Preload audio if not already cached
       if (!cueAudioRefs.current[cueId]) {
-        cueAudioRefs.current[cueId] = new Audio(`${cueId}.mp3`);
+        cueAudioRefs.current[cueId] = new Audio(`${import.meta.env.BASE_URL}${cueId}.mp3`);
       }
     });
 
@@ -80,7 +80,7 @@ function App() {
     console.log('✅ Cue schedule updated:', cueScheduleRef.current);
 
     // Start the main background track
-    mainAudioRef.current = new Audio('main-track.mp3');
+    mainAudioRef.current = new Audio(`${import.meta.env.BASE_URL}main-track.mp3`);
     mainAudioRef.current.play().catch(err => console.error("Audio play error:", err));
 
     // Start decrementing time every second
@@ -144,7 +144,7 @@ function App() {
       console.log('🚨 Trap Triggered:', location);
       setTrapMessages(prev => [...prev, { device_id, event, location, sequence, received_at }]);
 
-      const trapSound = new Audio('trap.mp3');
+      const trapSound = new Audio(`${import.meta.env.BASE_URL}trap.mp3`);
       trapSound.play().catch(err => console.error("Trap sound failed:", err));
     };
 
