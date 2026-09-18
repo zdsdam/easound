@@ -19,6 +19,7 @@ function App() {
   const [timeLeft, setTimeLeft] = useState(0); // countdown in seconds
   const [running, setRunning] = useState(false); // is the countdown active?
   const [trapMessages, setTrapMessages] = useState([]); // ✅ Trap messages from backend
+  const [serverConnected, setServerConnected] = useState(false);
 
   // Refs to store persistent values between renders
   const intervalRef = useRef(null); // ID of the interval timer
@@ -122,17 +123,44 @@ function App() {
 
   // Trap system WebSocket listener
   useEffect(() => {
-    const socket = io('http://localhost:5000'); // im keeping this 
+    const socketUrl = import.meta.env.DEV
+      ? (import.meta.env.VITE_SOCKET_URL?.trim() || window.location.origin)
+      : window.location.origin;
+    const socket = io(socketUrl);
 
-    socket.on('trap_triggered', (data) => {
-      console.log('🚨 Trap Triggered:', data.message);
-      setTrapMessages(prev => [...prev, data.message]);
+    const handleConnect = () => setServerConnected(true);
+    const handleDisconnect = () => setServerConnected(false);
+    const handleTrap = (data) => {
+      if (!data || data.event !== 'trap_triggered'
+          || typeof data.device_id !== 'string'
+          || typeof data.location !== 'string'
+          || !Number.isInteger(data.sequence)
+          || typeof data.received_at !== 'string'
+          || Number.isNaN(Date.parse(data.received_at))) {
+        console.error('Invalid trap event:', data);
+        return;
+      }
+      const { device_id, event, location, sequence, received_at } = data;
+      console.log('🚨 Trap Triggered:', location);
+      setTrapMessages(prev => [...prev, { device_id, event, location, sequence, received_at }]);
 
       const trapSound = new Audio('trap.mp3');
       trapSound.play().catch(err => console.error("Trap sound failed:", err));
-    });
+    };
 
-    return () => socket.disconnect();
+    // Register once per mount, never inside the reconnecting connect handler.
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('connect_error', handleDisconnect);
+    socket.on('trap_triggered', handleTrap);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('connect_error', handleDisconnect);
+      socket.off('trap_triggered', handleTrap);
+      socket.disconnect();
+    };
   }, []);
 
   // Compute how much of the progress bar should be filled
@@ -141,6 +169,9 @@ function App() {
   return (
     <div className="container">
       <h2>Escape Room Setup</h2>
+      <p role="status" style={{ color: serverConnected ? '#176b32' : '#a12622' }}>
+        Server: {serverConnected ? 'Connected' : 'Disconnected'}
+      </p>
 
       <div style={{ marginTop: '20px' }}>
         {running ? (
@@ -200,8 +231,13 @@ function App() {
           <div style={{ marginTop: '30px' }}>
             <h3>Trap Activations</h3>
             <ul>
-              {trapMessages.map((msg, i) => (
-                <li key={i} style={{ color: 'red', fontWeight: 'bold' }}>{msg}</li>
+              {trapMessages.map((trap, i) => (
+                <li key={i} style={{ color: 'red', fontWeight: 'bold' }}>
+                  {trap.location} —{' '}
+                  <time dateTime={trap.received_at} title={trap.received_at}>
+                    {new Date(trap.received_at).toLocaleString()}
+                  </time>
+                </li>
               ))}
             </ul>
           </div>

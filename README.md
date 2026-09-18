@@ -6,6 +6,30 @@ There are cue's that can be selected (5 minutes left, 10 minutes left, etc), and
 
 One thing I'd like to add in the future is live feedback for raspberry pi traps we've set up in the arena. The cue cooresponding to this is titled "blackout" to signify 1 minute left in the game, but this is a (hopefully) temporary placeholder. 
 
+## Flask Socket.IO connection
+
+Run `npm install`, then `npm run dev`. For a separate local Flask server,
+create `.env.local` in this repository containing:
+
+```dotenv
+VITE_SOCKET_URL=http://localhost:5000
+```
+
+Restart Vite after changing the environment file. Development uses this URL
+when set, otherwise it connects to `window.location.origin`. Production always
+uses the page's origin, even if `VITE_SOCKET_URL` was set during the build.
+Production hosting must serve or proxy `/socket.io/` to Flask on that same
+origin. GitHub Pages alone cannot provide the Flask Socket.IO endpoint.
+
+The frontend receives `trap_triggered` events with `device_id`, `event`,
+`location`, `sequence`, and `received_at`. It displays the trap location and
+server timestamp in the browser's local time and plays the existing `trap.mp3`.
+The server connection status updates on connect, disconnect, and connection
+errors. Listeners are registered once and removed when the component unmounts.
+The timer and normal audio cues are unchanged.
+
+Verify with `npm run build` and `npm run lint`.
+
 Note: the text below is the generated README from the Vite development server (React, Javascript)
 
 # React + Vite
